@@ -1,11 +1,14 @@
 const ROCK = 'rock';
 const PAPER = 'paper';
 const SCISSORS = 'scissors';
+const maxRounds = 5;
+
+let roundsPlayed = 0;
 let playerWins = 0;
 let computerWins = 0;
 
 function getComputerChoice() {
-    let num = getRandomInteger(0,2);
+    let num = getRandomInteger(0, 2);
     let computerSelection;
     switch (num) {
         case 0:
@@ -21,26 +24,13 @@ function getComputerChoice() {
     return computerSelection;
 }
 
-function getPlayerChoice() {
-    let playerSelection;
-    let validInput = false;
-    while (!validInput) {
-        playerSelection = prompt("Enter your choice.");
-        playerSelection = playerSelection.toLowerCase();
-        if (playerSelection === ROCK || playerSelection === PAPER || playerSelection === SCISSORS) {
-            validInput = true;
-        }
-    }
-    return playerSelection; 
-}
-
 function playRound(playerSelection, computerSelection) {
     let result;
+    if (playerSelection === computerSelection) {
+        result = `Draw! Both chose ${playerSelection}.`;
+    }
     if (playerSelection === ROCK) {
-        if (computerSelection === ROCK) {
-            result = 'Draw! Both chose Rock.';
-        }
-        else if (computerSelection === PAPER) {
+        if (computerSelection === PAPER) {
             result = 'You lose! Paper beats Rock.';
             computerWins++;
         }
@@ -54,9 +44,6 @@ function playRound(playerSelection, computerSelection) {
         if (computerSelection === ROCK) {
             result = 'You win! Paper beats Rock.';
             playerWins++;
-        }
-        else if (computerSelection === PAPER) {
-            result = 'Draw! Both chose Paper.';
         }
         else if (computerSelection === SCISSORS) {
             result = 'You lose! Scissors beats Paper.';
@@ -73,33 +60,83 @@ function playRound(playerSelection, computerSelection) {
             result = 'You win! Scissors beats Paper.';
             playerWins++;
         }
-        else if (computerSelection === SCISSORS) {
-            result = 'Draw! Both chose Scissors.';
-        }
     }
     return result;
 }
 
-function game() {
-    for (let i = 0; i < 5; i++) {
-        let computerSelection = getComputerChoice();
-        let playerSelection = getPlayerChoice(); 
-        console.log(playRound(playerSelection, computerSelection));
-    }
+function startRound(event) {
+    const playerSelection = event.srcElement.id
+    const computerSelection = getComputerChoice();
+    let result = playRound(playerSelection, computerSelection);
+    result = `Round ${roundsPlayed + 1}: ${result}`;
+    displayRoundResult(result);
+    displayGameWinner();
+}
 
+function displayRoundResult(result) {
+    const pEl = document.createElement("p");
+    pEl.textContent = result;
+    document.querySelector(".flex-column").appendChild(pEl);
+    roundsPlayed++;
+}
+
+function displayGameWinner() {
+    if (roundsPlayed === maxRounds) {
+        const h1El = document.createElement("h1");
+        h1El.textContent = checkWinner();
+        document.querySelector(".flex-column").appendChild(h1El);
+
+        removePlayerChoiceEventListeners();
+        addRestartButton();
+    }
+}
+
+function checkWinner() {
+    let result;
     if (computerWins > playerWins) {
-        console.log(`Computer wins by ${computerWins} to ${playerWins}.`);
+        result = `Computer wins by ${computerWins} to ${playerWins}.`;
     }
     else if (playerWins > computerWins) {
-        console.log(`Player wins by ${playerWins} to ${computerWins}.`);
+        result = `Player wins by ${playerWins} to ${computerWins}.`;
     }
     else if (playerWins === computerWins) {
-        console.log(`Its a draw with both having ${playerWins} wins.`);
+        result = `Its a draw with both having ${playerWins} wins.`;
     }
+    return result;
+}
+
+function addRestartButton() {
+    const buttonEl = document.createElement("button");
+    buttonEl.textContent = "Restart Game"
+    buttonEl.addEventListener('click', restartGame)
+    document.querySelector(".flex-column").appendChild(buttonEl);
 }
 
 function getRandomInteger(min, max) {
-    return Math.floor(Math.random() * (max - min + 1) ) + min;
+    return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-game();
+function restartGame(event) {
+    roundsPlayed = 0;
+    playerWins = 0;
+    computerWins = 0;
+    document.querySelector(".flex-column").replaceChildren();
+    addPlayerChoiceEventListeners();
+}
+function addPlayerChoiceEventListeners() {
+    const playerSelectionBtns = document.querySelectorAll("button");
+
+    playerSelectionBtns.forEach(button => {
+        button.addEventListener('click', startRound)
+    })
+}
+
+function removePlayerChoiceEventListeners() {
+    const playerSelectionBtns = document.querySelectorAll("button");
+
+    playerSelectionBtns.forEach(button => {
+        button.removeEventListener('click', startRound)
+    })
+}
+
+addPlayerChoiceEventListeners();
